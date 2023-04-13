@@ -13,6 +13,13 @@ body {
     padding: 0px;
 }
 
+#navTbl{
+    border: 3px solid;
+    color: gray;
+    margin: 50%;
+    display: flex;
+}
+
 #form {
     display: flex;
     flex-direction: column;

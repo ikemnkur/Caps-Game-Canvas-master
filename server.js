@@ -16,10 +16,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-//   res.send('Server is running!');
+  //   res.send('Server is running!');
   // res.sendFile(__dirname + '/index.html');
   res.render('index')
 });
+
+var game = {
+  id: "",
+  player1: "",
+  player2: "",
+  pieces: "",
+  time: 300,
+  language: "English",
+  Elo: 500,
+  range: 100,
+}
+
+var games = []
 
 io.on('connection', (socket) => {
   console.log('A user connected');

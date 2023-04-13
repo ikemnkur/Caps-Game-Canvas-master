@@ -11,7 +11,7 @@
         <!-- <canvas style="background-color:yellow;">This is canvas</canvas>  -->
         <canvas hidden id="canvas" width="500" height="500"> test board </canvas>
     </div>
-    <!-- <link rel="stylesheet" href="/main.css" /> -->
+    <link rel="stylesheet" href="/main.css" />
     <script src="/socket.io/socket.io.js" defer></script>
     <script src="game.js"></script>
     
@@ -96,7 +96,31 @@
             clear: none;
         }
     </style>
-    <div>
+    <div id="menu">
+        <table id="navTbl">
+            <td style="width: 220px;">
+                Join Game
+            </td>
+            <td style="width: 220px;">
+                Create Game
+            </td>
+        </table>
+        <div id="lists">
+            <table style="background: rgb(103, 148, 247); width: 420px; height: 32px;">
+                <tr id="item">
+                    <td style="background: lightblue;">
+                        hep
+                    </td>
+                    <td>
+                       <button> dhd</button> hep
+                    </td>
+                    <td>
+                        hep
+                    </td>
+                </tr>
+            </table>
+        </div>
+
         <div id="form">
             <label for="game-id">Game ID:</label>
             <input type="text" id="game-id" name="game-id" required>
