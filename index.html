@@ -9,11 +9,12 @@
 <body>
     <div style="text-align:center">
         <!-- <canvas style="background-color:yellow;">This is canvas</canvas>  -->
-        <canvas hidden id="canvas" width="500" height="500"> test board </canvas>
+        <canvas id="canvas" width="500" height="500"> test board </canvas>
     </div>
-    <link rel="stylesheet" href="/main.css" />
+    <link rel="stylesheet" href="main.css" />
+    <script src="socket.io/socket.io.js" defer></script>
     <script src="game.js"></script>
-    <script src="/socket.io/socket.io.js" defer></script>
+
     <style>
         #canvas {
             border: 5px solid;
@@ -21,6 +22,7 @@
             background-color: lightblue;
             padding: 0px;
         }
+
         body {
             display: flex;
             justify-content: center;
@@ -95,7 +97,62 @@
             clear: none;
         }
     </style>
-    <div>
+    <div id="menu">
+        <table id="navTbl">
+            <td
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
+                Join Game
+            </td>
+            <td
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
+                Create Game
+            </td>
+        </table>
+        <div id="lists">
+            <table style="background: rgb(103, 148, 247); width: 420px; height: 32px;">
+                <tr>
+                    <td>
+                        #
+                    </td>
+                    <td>
+                        User
+                    </td>
+                    <td>
+                        Lang
+                    </td>
+                    <td>
+                        Time
+                    </td>
+                    <td>
+                        Skill
+                    </td>
+                    <td>
+                        Play
+                    </td>
+                </tr>
+                <tr id="item" style="background: lightblue;">
+                    <td>
+                        #1
+                    </td>
+                    <td>
+                        username
+                    </td>
+                    <td>
+                        Eng
+                    </td>
+                    <td>
+                        5m
+                    </td>
+                    <td>
+                        510
+                    </td>
+                    <td>
+                        <button> Join </button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
         <div id="form">
             <label for="game-id">Game ID:</label>
             <input type="text" id="game-id" name="game-id" required>
@@ -133,7 +190,7 @@
                     <div class="some-class">
                         <input type="radio" class="radio" name="50p" value="50" id="50p" />
                         <label for="50p">± 50</label>
-                        <input type="radio" class="radio" name="100p" value="100" id="100p" checked="true"/>
+                        <input type="radio" class="radio" name="100p" value="100" id="100p" checked="true" />
                         <label for="100p">± 100</label>
                         <input type="radio" class="radio" name="200p" value="200" id="200p" />
                         <label for="200p">±200</label>
@@ -143,23 +200,35 @@
             <input type="range" id="levels" name="levels" min="1" max="1000" step="5">
 
 
-            <script>
-                const levelsInput = document.getElementById('levels');
-                const levelsDisplay = document.getElementById('levels-display');
 
-                // Update the levels display when the slider value changes
-                levelsInput.addEventListener('input', () => {
-                    levelsDisplay.textContent = levelsInput.value;
-                });
 
-            </script>
-            <div style="display:flex">
-                <button type="submit" id="create-button">Create</button>
-                <button type="submit" id="sumbit-button">Join</button>
+            <div>
+                <button id="submit-button">Create</button>
             </div>
+
         </div>
     </div>
 
 </body>
+
+<script>
+    var canvas = document.getElementById("canvas");
+    var form = document.getElementById("form");
+    canvas.hidden = true;
+    const levelsInput = document.getElementById('levels');
+    const levelsDisplay = document.getElementById('levels-display');
+
+    // Update the levels display when the slider value changes
+    levelsInput.addEventListener('input', () => {
+        levelsDisplay.textContent = levelsInput.value;
+    });
+
+    const createBtn = document.getElementById('submit-button');
+    createBtn.addEventListener('click', () => {
+        console.log("clicked");
+        canvas.hidden = false;
+        canvas.hidden = true;
+    });
+</script>
 
 </html>

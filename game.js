@@ -477,8 +477,10 @@ submitButton.addEventListener('click', (e) => {
 
   // Emit the 'submit' event to the server
   socket.emit('submit', data);
+  
   canvas.hidden = false;
   form.hidden = true;
+
 });
 
 socket.on('submit', (data) => {
