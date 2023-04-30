@@ -7,96 +7,9 @@
 </head>
 
 <body>
-    <div style="text-align:center">
-        <!-- <canvas style="background-color:yellow;">This is canvas</canvas>  -->
-        <canvas id="canvas" width="500" height="500"> test board </canvas>
-    </div>
-    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="menu.css" />
     <script src="socket.io/socket.io.js" defer></script>
-    <script src="game.js"></script>
-
-    <style>
-        #canvas {
-            border: 5px solid;
-            border-radius: 3px;
-            background-color: lightblue;
-            padding: 0px;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f8f8f8;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 400px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
-        }
-
-        input[type="text"],
-        select {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: none;
-            background-color: #f8f8f8;
-            font-size: 16px;
-            font-family: 'Helvetica Neue', sans-serif;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        button[type="submit"] {
-            background-color: #0077cc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #005ea6;
-        }
-
-        label {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        #levels-display {
-            display: inline-block;
-            width: 40px;
-            text-align: center;
-            margin-left: 10px;
-            /* float: left; */
-        }
-
-        .some-class {
-            margin-top: 10px;
-            display: flex;
-            clear: none;
-        }
-    </style>
+    <script src="menu.js" defer></script>
     <div id="menu">
         <table id="navTbl">
             <td
@@ -208,27 +121,6 @@
 
         </div>
     </div>
-
 </body>
-
-<script>
-    var canvas = document.getElementById("canvas");
-    var form = document.getElementById("form");
-    canvas.hidden = true;
-    const levelsInput = document.getElementById('levels');
-    const levelsDisplay = document.getElementById('levels-display');
-
-    // Update the levels display when the slider value changes
-    levelsInput.addEventListener('input', () => {
-        levelsDisplay.textContent = levelsInput.value;
-    });
-
-    const createBtn = document.getElementById('submit-button');
-    createBtn.addEventListener('click', () => {
-        console.log("clicked");
-        canvas.hidden = false;
-        canvas.hidden = true;
-    });
-</script>
 
 </html>

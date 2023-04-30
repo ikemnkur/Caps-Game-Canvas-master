@@ -28,6 +28,37 @@ var nCol = nCol || dim;    // default number of columns
 cellWidth /= nCol;            // cellWidth of a block
 cellHeight /= nRow;            // cellHeight of a block
 
+
+
+class Game {
+  constructor() {
+    //server controlled variables
+    this.id = 0;
+    this.p1 = "true";
+    this.p2 = "p2";
+    this.turn = "p1";
+    this.moveNum = 0;
+    this.boardSize = 5;
+    this.pieces = [];
+    this.moves = [];
+    // game creation variables
+    this.time = 300;
+    this.language = "English";
+    this.Elo = 500;
+    this.range = 100;
+    //timing variables
+    this.startTime = new Date();
+    this.endTime = new Date();
+    this.endTime.setDate(this.endTime.getTime() + 1000 * 60 * 5);
+    this.mvStartTime = new Date();
+    this.mvEndTime = new Date();
+    this.gameStart = false;
+    this.gameEnd = false;
+  }
+}
+
+let game = new Game();
+
 function playsound(sound) {
   if (soundIsplaying == false) {
     soundIsplaying = true;
@@ -127,16 +158,16 @@ function Piece(x, y, r, fill, color) {
 Piece.prototype.draw = function (ctx) {
   ctx.strokeStyle = this.fill;
   ctx.beginPath();
-  if(this.color == "blue")
-  ctx.fillStyle = "#3333FF";
-  if(this.color == "red")
-  ctx.fillStyle = "#FF3333";
-  if(this.color == "green")
-  ctx.fillStyle = "#33FF33";
+  if (this.color == "blue")
+    ctx.fillStyle = "#3333FF";
+  if (this.color == "red")
+    ctx.fillStyle = "#FF3333";
+  if (this.color == "green")
+    ctx.fillStyle = "#33FF33";
   ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
   ctx.fill();
-  
-  ctx.lineWidth = 2; 
+
+  ctx.lineWidth = 2;
   if (this.clicked == false) {
     ctx.strokeStyle = '#006600';
   } else {
@@ -163,6 +194,53 @@ Piece.prototype.center = function (mx, my) {
   this.x = x;
   this.y = Math.abs(canvas.height - y);
 }
+
+// Crown
+function Crown(x, y, r) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.r = r || 1;
+  this.id = "crown";
+  this.type = 'obj';
+  this.clicked = false;
+  this.img = new Image();
+  this.imgSelected = new Image();
+  this.imgSelected.src = "crownSelected.png";
+  this.img.src = "crown.png";
+  this.height = 32;
+  this.width = 40;
+}
+
+// Draws crown image to a given context
+Crown.prototype.draw = function (ctx) {
+  ctx.fillStyle = "#66FF66";
+  ctx.strokeStyle = "#AA99AA";
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r+2, 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.fill();
+
+  if (this.clicked) {
+    ctx.drawImage(this.imgSelected, this.x - this.width / 2, this.y - this.height/2, this.width, this.height);
+  } else {
+    ctx.drawImage(this.img, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+  }
+}
+
+Crown.prototype.contains = function (mx, my) {
+  return Math.sqrt((mx - this.x) * (mx - this.x) + (my - this.y) * (my - this.y)) < this.r;
+}
+
+Crown.prototype.center = function (mx, my) {
+  cellX = Math.floor((mx - ofstH - pad) / cellWidth) + 1;
+  cellY = Math.floor((Math.abs(canvas.height - my) - ofstV) / cellHeight) + 1;
+  let x = cellX * 40 + 8 + 22;
+  let y = cellY * 40 + 8 + 22;
+  console.log("pos: ", "(", x, ",", y, ")");
+  this.x = x;
+  this.y = Math.abs(canvas.height - y);
+}
+
 
 // Circle Class
 function Circle(x, y, r, fill) {
@@ -308,7 +386,7 @@ function CanvasState(canvas) {
       var mouse = myState.getMouse(e);
       var mx = mouse.x;
       var my = mouse.y;
-      if (activeObj.type == "piece") {
+      if (activeObj.type == "piece" || activeObj.type == "obj") {
         console.log("centering: (", mx, ",", canvas.height - my, ")")
         activeObj.center(mx, my);
         activeObj.clicked = false;
@@ -320,16 +398,16 @@ function CanvasState(canvas) {
     myState.dragging = false;
   }, true);
 
-  // double click for making new shapes
-  canvas.addEventListener('dblclick', function (e) {
-    if (ofstV - pad <= mouseY && mouseY <= canvas.height - ofstV - pad) {
-      if (ofstH + pad <= mouseX && mouseX <= canvas.width - ofstH + pad) {
-        var mouse = myState.getMouse(e);
-        myState.addShape(new Circle(mouse.x, mouse.y, 20, 'rgba(0,255,0,.6)'));
-        playsound("spawn.mp3");
-      }
-    }
-  }, true);
+  // // double click for making new shapes
+  // canvas.addEventListener('dblclick', function (e) {
+  //   if (ofstV - pad <= mouseY && mouseY <= canvas.height - ofstV - pad) {
+  //     if (ofstH + pad <= mouseX && mouseX <= canvas.width - ofstH + pad) {
+  //       var mouse = myState.getMouse(e);
+  //       myState.addShape(new Circle(mouse.x, mouse.y, 20, 'rgba(0,255,0,.6)'));
+  //       playsound("spawn.mp3");
+  //     }
+  //   }
+  // }, true);
 
   // **** Options! ****
 
@@ -381,10 +459,9 @@ CanvasState.prototype.draw = function () {
       var mySel = this.selection;
       if (mySel.type == "rect") {
         ctx.strokeRect(mySel.x, mySel.y, mySel.w, mySel.h);
-      } else {
+      } else if (mySel.type == "obj") {
         ctx.arc(mySel.x, mySel.y, mySel.r, 0, 2 * Math.PI);
       }
-
     }
 
     // ** Add stuff you want drawn on top all the time here **
@@ -393,7 +470,6 @@ CanvasState.prototype.draw = function () {
     this.valid = true;
   }
 }
-
 
 // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
 // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
@@ -426,8 +502,6 @@ CanvasState.prototype.getMouse = function (e) {
   };
 }
 
-
-
 function init() {
   var s = new CanvasState(document.getElementById('canvas'));
   s.addShape(new Shape(40, 40, 50, 50)); // The default is gray
@@ -436,51 +510,20 @@ function init() {
   s.addShape(new Shape(80, 150, 60, 30, 'rgba(127, 255, 212, .5)'));
   s.addShape(new Shape(125, 80, 30, 80, 'rgba(245, 222, 179, .7)'));
   s.addShape(new Piece(230, 500 - 310, 16, 'rgb(245, 222, 179)', "blue"));
-  s.addShape(new Piece(230, 500 - 190, 16, 'rgb(100, 222, 179)',"red"));
-  s.addShape(new Piece(230, 500 - 230, 16, 'rgb(245, 60, 179)',"red"));
+  s.addShape(new Piece(230, 500 - 190, 16, 'rgb(100, 222, 179)', "red"));
+  s.addShape(new Piece(230, 500 - 230, 16, 'rgb(245, 60, 179)', "red"));
   s.addShape(new Piece(230, 500 - 270, 16, 'rgb(245, 222, 90)', "blue"));
+  s.addShape(new Crown(230 - 50, 500 - 270, 16, 'rgb(245, 222, 90)'));
 }
 
 init();
 
-// const socket = io("http://localhost:3000/");
-const socket = io('/');
+const socket = io();
 
 socket.on('connect', () => {
   console.log('Connected to server');
 });
 
-socket.on('game-data', (data) => {
-  console.log('Received game data:', data);
-
-  // Do something with the game data here
-});
-
-socket.emit('game-data', () => {
-  // Send game data to the server
-  console.log("Sent game data:");
-});
-
-// Add event listener for submit button
-const submitButton = document.getElementById('submit-button');
-submitButton.addEventListener('click', (e) => { 
-  preventDefault(e);
-  var form = document.getElementById('form');
-
-  const data = {
-    // Add any data you want to send with the 'submit' event
-    "gameId": form.querySelector("game-id").value,
-    "username": form.querySelector("username").value,
-    "language": form.querySelector("game-id").value,
-    "level": form.querySelector("level").value,
-    "time": form.querySelector("time").value,
-  };
-
-  // Emit the 'submit' event to the server
-  socket.emit('submit', data);
-  canvas.hidden = false;
-  form.hidden = true;
-});
 
 socket.on('submit', (data) => {
   console.log('Submit button pressed:', data);

@@ -7,14 +7,44 @@
 </head>
 
 <body>
-    <div style="text-align:center">
-        <!-- <canvas style="background-color:yellow;">This is canvas</canvas>  -->
-        <canvas hidden id="canvas" width="500" height="500"> test board </canvas>
+    <div>
+        <div id="form2"
+            style="padding: 10px; margin: 10px; border: 5px solid; border-radius: 5px; background-color: lavender;">
+            <div style="padding: 5px;">
+                <label> Username: </label>
+                <input id="usernameInput" type="text">
+                <button id="startBtn"> Start A Match </button>
+            </div>
+            <div style="padding: 5px;">
+                <p id="startErrorMsg" hidden style="color: red;">Error: Type a Username</p>
+                <p id="searchMsg" hidden style="color: #dab901;">Searching for a Player...</p>
+                <p id="foundMsg" hidden style="color: green;">A player has been found! A New Game has Begun.</p>
+                <p id="gameMsg" hidden style="color: black;">Begin</p>
+                <p id="winMsg" hidden style="color: rgb(71, 192, 1); font-size: 20px; font-weight: bold;">YOU WON!!!</p>
+                <p id="loseMsg" hidden style="color: rgb(206, 0, 0); font-size: 20px; font-weight: bold;">YOU LOST!!!
+                </p>
+            </div>
+            <button hidden id="newGameBtn" style="padding: 10px; margin: 10px; background: lightcyan;"> New Game
+            </button>
+            <div>
+                <text style="padding: 5px; ">
+                    GAME ID:
+                    <text id="gameID">#XXXX</text></text>
+            </div>
+            <div id="pvpInfo" style="padding: 5px;">
+                <text class="P1">P1:</text>
+                <text class="P1" id="p1Txt">User1</text>
+                <text style="color: red; padding: 0px 5px 0px 5px;">-Versus- </text>
+                <text class="P2">P2:</text>
+                <text class="P2" id="p2Txt">User2</text>
+            </div>
+        </div>
+        <canvas id="canvas" width="500" height="500"> test board </canvas>
     </div>
-    <link rel="stylesheet" href="/main.css" />
+    <link rel="stylesheet" href="main.css" />
     <script src="/socket.io/socket.io.js" defer></script>
     <script src="game.js"></script>
-    
+
     <style>
         #canvas {
             border: 5px solid;
@@ -22,6 +52,7 @@
             background-color: lightblue;
             padding: 0px;
         }
+
         body {
             display: flex;
             justify-content: center;
@@ -98,24 +129,55 @@
     </style>
     <div id="menu">
         <table id="navTbl">
-            <td style="width: 220px;">
+            <td
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
                 Join Game
             </td>
-            <td style="width: 220px;">
+            <td
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
                 Create Game
             </td>
         </table>
         <div id="lists">
             <table style="background: rgb(103, 148, 247); width: 420px; height: 32px;">
-                <tr id="item">
-                    <td style="background: lightblue;">
-                        hep
+                <tr>
+                    <td>
+                        #
                     </td>
                     <td>
-                       <button> dhd</button> hep
+                        User
                     </td>
                     <td>
-                        hep
+                        Lang
+                    </td>
+                    <td>
+                        Time
+                    </td>
+                    <td>
+                        Skill
+                    </td>
+                    <td>
+                        Play
+                    </td>
+                </tr>
+                <tr id="item" style="background: lightblue;">
+                    <td>
+                        #1
+                    </td>
+                    <td>
+                        username
+                    </td>
+                    <td>
+                        Eng
+                    </td>
+                    <td>
+                        5m
+                    </td>
+                    <td>
+                        510
+                    </td>
+                    <td>
+                        <button> Join </button>
                     </td>
                 </tr>
             </table>
@@ -158,7 +220,7 @@
                     <div class="some-class">
                         <input type="radio" class="radio" name="50p" value="50" id="50p" />
                         <label for="50p">± 50</label>
-                        <input type="radio" class="radio" name="100p" value="100" id="100p" checked="true"/>
+                        <input type="radio" class="radio" name="100p" value="100" id="100p" checked="true" />
                         <label for="100p">± 100</label>
                         <input type="radio" class="radio" name="200p" value="200" id="200p" />
                         <label for="200p">±200</label>
@@ -168,23 +230,35 @@
             <input type="range" id="levels" name="levels" min="1" max="1000" step="5">
 
 
-            <script>
-                const levelsInput = document.getElementById('levels');
-                const levelsDisplay = document.getElementById('levels-display');
 
-                // Update the levels display when the slider value changes
-                levelsInput.addEventListener('input', () => {
-                    levelsDisplay.textContent = levelsInput.value;
-                });
 
-            </script>
-            <div style="display:flex">
-                <button type="submit" id="create-button">Create</button>
-                <button type="submit" id="sumbit-button">Join</button>
+            <div>
+                <button id="submit-button">Create</button>
             </div>
+
         </div>
     </div>
 
 </body>
+
+<script>
+    var canvas = document.getElementById("canvas");
+    var form = document.getElementById("form");
+    canvas.hidden = true;
+    const levelsInput = document.getElementById('levels');
+    const levelsDisplay = document.getElementById('levels-display');
+
+    // Update the levels display when the slider value changes
+    levelsInput.addEventListener('input', () => {
+        levelsDisplay.textContent = levelsInput.value;
+    });
+
+    const createBtn = document.getElementById('submit-button');
+    createBtn.addEventListener('click', () => {
+        console.log("clicked");
+        canvas.hidden = false;
+        // canvas.hidden = true;
+    });
+</script>
 
 </html>
