@@ -32,9 +32,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/menu', (req, res) => {
-  //   res.send('Server is running!');
   res.sendFile(__dirname + '/public/menu.html');
-  // res.render('index')
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + '/public/login.html');
 });
 
 class Game {
@@ -107,3 +109,93 @@ io.on('connection', (socket) => {
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+const fs = require('fs');
+
+const jsonServer = require('json-server');
+const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+
+const router = jsonServer.router('db.json');
+const userdb = JSON.parse(fs.readFileSync('./users.json', 'UTF-8'));
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(cookieParser());
+
+// Register endpoint
+app.post('/register', (req, res) => {
+  const { username, password, email } = req.body;
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(password, salt);
+
+  console.log("body: " + req.body);
+
+  let data = {
+    "id": numOfUsers,
+    "username": username,
+    "passwordHashed": hash,
+    "password": password,
+    "email": email,
+    "createDate": new Date()
+  }
+
+  // userdb.users.push({
+  //   username, password: hash, email: email
+  // });
+
+  fs.writeFileSync('./users.json', JSON.stringify(data), 'UTF-8');
+
+  // fs.writeFileSync('./users.json', JSON.stringify(userdb), 'UTF-8');
+
+  res.send('Registration successful');
+});
+
+// let numOfUsers = 1;
+
+// let data1 = {
+//     "id": numOfUsers,
+//     "username": "user1",
+//     "password": "1234dawg",
+//     "createDate": new Date()
+// }
+
+// fs.writeFileSync('./users.json', JSON.stringify(data1), 'UTF-8');
+
+// Login endpoint
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = userdb.users.find((u) => u.username === username);
+
+  if (user && bcrypt.compareSync(password, user.password)) {
+    const token = bcrypt.hashSync(username, bcrypt.genSaltSync(10));
+
+    res.cookie('token', token);
+    res.send('Login successful');
+  } else {
+    res.status(401).send('Invalid username or password');
+  }
+});
+
+// Logout endpoint
+app.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.send('Logout successful');
+});
+
+// Protected endpoint
+app.get('/protected', (req, res) => {
+  const token = req.cookies.token;
+
+  if (token && bcrypt.compareSync(userdb.users.find((u) => u.username === bcrypt.hashSync(token, bcrypt.genSaltSync(10))).username, token)) {
+    res.send('Protected data');
+  } else {
+    res.status(401).send('Unauthorized');
+  }
+});
+
+app.use('/api', router);
+
+
+

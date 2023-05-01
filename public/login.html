@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kaps</title>
+</head>
+
+<body>
+    <link rel="stylesheet" href="menu.css" />
+    <script src="socket.io/socket.io.js" defer></script>
+    <script src="login.js" defer></script>
+    <div id="menu">
+        <table id="navTbl">
+            <td id="btnRegister"
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
+                Registration
+            </td>
+            <td id="btnLogin"
+                style="width: 220px; border: 2px solid; border-color: black; background:rgba(81, 68, 255, 0.3); padding: 10px; margin: 5px;">
+                Login
+            </td>
+        </table>
+
+        <div id="form">
+
+            <div>
+                <label for="username">User Name:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div id="email">
+                <label for="email">Email:</label>
+                <input id="emailInput" type="text" id="email" name="email" required>
+            </div>
+
+            <div>
+                <label for="Password">Password:</label>
+                <input type="text" id="password" name="Password" required>
+            </div>
+
+
+            <div id="confirmPassword">
+                <label for="game-id">Password:</label>
+                <input id="confirmPasswordInput" type="text" id="Password" name="Password" required>
+            </div>
+
+            <div>
+                <button id="submit-button">Registration</button>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
