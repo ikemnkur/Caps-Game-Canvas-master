@@ -1,6 +1,5 @@
 
 
-var SCvp_offest = 50;
 let mouseX = 0;
 let mouseY = 0;
 let cellX = 1;
@@ -10,8 +9,14 @@ var canvasY = 0;
 var idNum = 0;
 var activeObj;
 var soundIsplaying = false;
+let gameover = false; gamestart = false;
+
+let gameBoard;
+let lastPieceClicked;
+let cellClicked = [0,0];
 
 var canvas = document.getElementById("canvas");
+const context = canvas.getContext('2d');
 
 var boardWidth = 300;
 var boardHeight = 300;
@@ -19,16 +24,23 @@ var cellWidth = canvas.width - 100;
 var cellHeight = canvas.height - 100;
 var ofstV = 50;
 var ofstH = 50;
-var pad = 5
-var dim = 10;
+var pad = 5;
+var boardSize = 11;
 
-var nRow = nRow || dim;    // default number of rows
-var nCol = nCol || dim;    // default number of columns
+var nRow = nRow || boardSize;    // default number of rows
+var nCol = nCol || boardSize;    // default number of columns
 
 cellWidth /= nCol;            // cellWidth of a block
 cellHeight /= nRow;            // cellHeight of a block
 
-
+const uInput = document.getElementById('usernameInput');
+const searchMsg = document.getElementById('searchMsg');
+const errorMsg = document.getElementById('startErrorMsg');
+const turnErrorMsg = document.getElementById('turnErrorMsg');
+const winMsg = document.getElementById('winMsg');
+const loseMsg = document.getElementById('loseMsg');
+var username = "";
+var playerNum = 1;
 
 class Game {
   constructor() {
@@ -38,7 +50,7 @@ class Game {
     this.p2 = "p2";
     this.turn = "p1";
     this.moveNum = 0;
-    this.boardSize = 5;
+    this.boardSize = 11;
     this.pieces = [];
     this.moves = [];
     // game creation variables
@@ -48,8 +60,9 @@ class Game {
     this.range = 100;
     //timing variables
     this.startTime = new Date();
+    var now = new Date();
     this.endTime = new Date();
-    this.endTime.setDate(this.endTime.getTime() + 1000 * 60 * 5);
+    this.endTime.setTime(this.startTime.getTime() + (30 * 60 * 1000));
     this.mvStartTime = new Date();
     this.mvEndTime = new Date();
     this.gameStart = false;
@@ -59,16 +72,25 @@ class Game {
 
 let game = new Game();
 
-function playsound(sound) {
+function playsound(sound, volume) {
   if (soundIsplaying == false) {
     soundIsplaying = true;
     var audio = new Audio(sound);
+    let vol = volume;
+    if (vol == null)
+      vol = 1;
+    audio.volume = vol;
     audio.play();
     setTimeout(soundIsplaying = false, audio.duration + 500)
     // console.log("sound is playing");
   } else {
     // console.log("sound is already playing");
   }
+}
+
+function drawBoard() {
+  drawWhiteSpace();
+  drawCheckeredBackground();
 }
 
 function drawWhiteSpace() {
@@ -81,10 +103,11 @@ function drawWhiteSpace() {
 function drawCheckeredBackground() {
   var ctx = canvas.getContext("2d");
   var cnt = 0;
-  for (var y = 0; y < dim; y++) {
-    for (var x = 0; x < dim; x++) {
+  for (var y = 0; y < boardSize; y++) {
+    for (var x = 0; x < boardSize; x++) {
       cnt++;
-      if ((cnt % 2 == 0 && y % 2 == 1) || (x % 2 == 0 && y % 2 == 0)) {
+      // if 
+      if ((cnt % 2 == 0 && y % 2 == 0) || (cnt % 2 == 0 && y % 2 == 1)) {
         ctx.fillStyle = "#000000";
         ctx.fillRect(50 + x * cellWidth, 50 + y * cellHeight, cellWidth, cellHeight); // y-offest 50
       } else {
@@ -106,12 +129,13 @@ function updateHUD() {
   ctx.clearRect(canvas.width / 2 - txtlen, 0, canvas.width + txtlen, ofstV);  // (0,0) the top left of the canvas
   ctx.fillStyle = "#FF0000";
   ctx.fillText("Cell: [" + cellX + "," + cellY + "]", canvas.width / 2 - txtlen, ofst1);
+  let position = document.getElementById("position");
+  position.innerText = "Square: [" + cellX + "," + cellY + "]";
 }
 
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 ctx.font = "16px Arial";
-
 
 canvas.addEventListener("mousemove", function (e) {
   var cRect = canvas.getBoundingClientRect();        // Gets CSS pos, and cellWidth/cellHeight
@@ -120,15 +144,12 @@ canvas.addEventListener("mousemove", function (e) {
   mouseX = canvasX;
   mouseY = Math.abs(canvas.height - canvasY);
   // draw mouse position
-  let ofst1 = 20; let ofst1x = 10;
-  var ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width / 3, ofstV);  // (0,0) the top left of the canvas
-  ctx.fillStyle = "#000000";
-  ctx.fillText("X: " + mouseX + ", Y: " + mouseY, ofst1x, ofst1);
-});
+  // let ofst1 = 20; let ofst1x = 10;
+  // var ctx = canvas.getContext("2d");
+  // ctx.clearRect(0, 0, canvas.width / 3, ofstV);  // (0,0) the top left of the canvas
+  // ctx.fillStyle = "#000000";
+  // ctx.fillText("X: " + mouseX + ", Y: " + mouseY, ofst1x, ofst1);
 
-
-canvas.addEventListener("mousedown", function (e) {
   if (ofstV - pad <= mouseY && mouseY <= canvas.height - ofstV - pad) {
     if (ofstH + pad <= mouseX && mouseX <= canvas.width - ofstH + pad) {
       cellX = Math.floor((mouseX - ofstH - pad) / cellWidth) + 1;
@@ -136,22 +157,36 @@ canvas.addEventListener("mousedown", function (e) {
       updateHUD();
     }
   }
-  console.log("Mouse (X,Y): [" + mouseX + ", " + mouseY + "]");
-  console.log("Cell: [" + cellX + ", " + cellY + "]");
-})
+  // console.log("Mouse (X,Y): [" + mouseX + ", " + mouseY + "]");
+  // console.log("Cell: [" + cellX + ", " + cellY + "]");
+});
+
+// canvas.addEventListener("mousedown", function (e) {
+//   if (ofstV - pad <= mouseY && mouseY <= canvas.height - ofstV - pad) {
+//     if (ofstH + pad <= mouseX && mouseX <= canvas.width - ofstH + pad) {
+//       cellX = Math.floor((mouseX - ofstH - pad) / cellWidth) + 1;
+//       cellY = Math.floor((mouseY - ofstV - pad) / cellHeight) + 1;
+//       updateHUD();
+//     }
+//   }
+//   console.log("Mouse (X,Y): [" + mouseX + ", " + mouseY + "]");
+//   console.log("Cell: [" + cellX + ", " + cellY + "]");
+// })
 
 
 // Piece Class
-function Piece(x, y, r, fill, color) {
+function Piece(x, y, r, fill, color, rank) {
   this.x = x || 0;
   this.y = y || 0;
   this.r = r || 1;
   this.fill = fill || '#AAAAAA';
-  this.rank = 1;
+  this.rank = rank || 1;
   this.id = idNum++;
   this.clicked = false;
   this.type = 'piece';
   this.color = color;
+  this.cellX = 0;
+  this.cellY = 0;
 }
 
 // Draws this shape to a given context
@@ -188,8 +223,10 @@ Piece.prototype.contains = function (mx, my) {
 Piece.prototype.center = function (mx, my) {
   cellX = Math.floor((mx - ofstH - pad) / cellWidth) + 1;
   cellY = Math.floor((Math.abs(canvas.height - my) - ofstV) / cellHeight) + 1;
-  let x = cellX * 40 + 8 + 22;
-  let y = cellY * 40 + 8 + 22;
+  this.cellX = cellX;
+  this.cellY = cellY;
+  let x = cellX * 50 + 25;
+  let y = cellY * 50 + 25;
   console.log("pos: ", "(", x, ",", y, ")");
   this.x = x;
   this.y = Math.abs(canvas.height - y);
@@ -209,6 +246,8 @@ function Crown(x, y, r) {
   this.img.src = "crown.png";
   this.height = 32;
   this.width = 40;
+  this.cellX = 0;
+  this.cellY = 0;
 }
 
 // Draws crown image to a given context
@@ -216,12 +255,11 @@ Crown.prototype.draw = function (ctx) {
   ctx.fillStyle = "#66FF66";
   ctx.strokeStyle = "#AA99AA";
   ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r+2, 0, 2 * Math.PI);
+  ctx.arc(this.x, this.y, this.r + 2, 0, 2 * Math.PI);
   ctx.stroke();
   ctx.fill();
-
   if (this.clicked) {
-    ctx.drawImage(this.imgSelected, this.x - this.width / 2, this.y - this.height/2, this.width, this.height);
+    ctx.drawImage(this.imgSelected, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
   } else {
     ctx.drawImage(this.img, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
   }
@@ -234,13 +272,11 @@ Crown.prototype.contains = function (mx, my) {
 Crown.prototype.center = function (mx, my) {
   cellX = Math.floor((mx - ofstH - pad) / cellWidth) + 1;
   cellY = Math.floor((Math.abs(canvas.height - my) - ofstV) / cellHeight) + 1;
-  let x = cellX * 40 + 8 + 22;
-  let y = cellY * 40 + 8 + 22;
-  console.log("pos: ", "(", x, ",", y, ")");
+  let x = cellX * 50 + 25;
+  let y = cellY * 50 + 25;
   this.x = x;
   this.y = Math.abs(canvas.height - y);
 }
-
 
 // Circle Class
 function Circle(x, y, r, fill) {
@@ -285,7 +321,7 @@ Shape.prototype.contains = function (mx, my) {
     (this.y <= my) && (this.y + this.h >= my);
 }
 
-function CanvasState(canvas) {
+function gameCanvasState(canvas) {
   // **** First some setup! ****
 
   this.canvas = canvas;
@@ -320,9 +356,9 @@ function CanvasState(canvas) {
   // **** Then events! ****
 
   // This is an example of a closure!
-  // Right here "this" means the CanvasState. But we are making events on the Canvas itself,
+  // Right here "this" means the gameCanvasState. But we are making events on the Canvas itself,
   // and when the events are fired on the canvas the variable "this" is going to mean the canvas!
-  // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
+  // Since we still want to use this particular gameCanvasState in the events we have to save a reference to it.
   // This is our reference!
   var myState = this;
 
@@ -342,6 +378,12 @@ function CanvasState(canvas) {
     for (var i = l - 1; i >= 0; i--) {
       if (shapes[i].contains(mx, my)) {
         var mySel = shapes[i];
+        if (mySel.color == "red" && playerNum == 0) {
+          return;
+        }
+        if (mySel.color == "blue" && playerNum == 1) {
+          return;
+        }
         // Keep track of where in the object we clicked
         // so we can move it smoothly (see mousemove)
         myState.dragoffx = mx - mySel.x;
@@ -353,7 +395,17 @@ function CanvasState(canvas) {
         playsound("click.mp3");
         console.log("id: ", mySel.id, "type: " + mySel.type)
         activeObj = mySel;
+        lastPieceClicked = mySel;
         return;
+      } else { 
+        let lpc = lastPieceClicked;
+        if (lpc != null){
+          lpc.clicked = false;
+          lpc.center(lpc.x, lpc.y);
+        }
+          
+        activeObj = null;
+        // playsound("select_denied.mp3", 0.1);
       }
     }
     // havent returned means we have failed to select anything.
@@ -363,7 +415,6 @@ function CanvasState(canvas) {
       myState.valid = false; // Need to clear the old selection border
       playsound("cancel.mp3");
     }
-
   }, true);
 
   canvas.addEventListener('mousemove', function (e) {
@@ -378,22 +429,29 @@ function CanvasState(canvas) {
   }, true);
 
   canvas.addEventListener('mouseup', function (e) {
-    if (myState.dragging == true) {
-      playsound("click.mp3");
-    }
+    // if (activeObj.cellX != cellX && activeObj.cellY != cellY) {
+    //   playsound("click.mp3");
+      
+    // }
     // Center the Active Piece
     if (activeObj != null) {
       var mouse = myState.getMouse(e);
       var mx = mouse.x;
       var my = mouse.y;
       if (activeObj.type == "piece" || activeObj.type == "obj") {
-        console.log("centering: (", mx, ",", canvas.height - my, ")")
-        activeObj.center(mx, my);
-        activeObj.clicked = false;
-        playsound("deselect.wav");
-        myState.valid = false;
+        if (activeObj.cellX == cellX && activeObj.cellY == cellY) {
+          console.log("selected");
+          activeObj.center(activeObj.x, activeObj.y)
+        } else if (activeObj.cellY != cellX && activeObj.cellY != cellY) { 
+          console.log("Dragged to: [", cellX, ",", cellY, "] from [", activeObj.cellX, ",", activeObj.cellY, "]");
+          // console.log("centering: (", mx, ",", canvas.height - my, ")")
+          activeObj.center(mx, my);
+          activeObj.clicked = false;
+          playsound("deselect.wav");
+          myState.valid = false;
+          activeObj = null;
+        }
       }
-      activeObj = null;
     }
     myState.dragging = false;
   }, true);
@@ -419,18 +477,19 @@ function CanvasState(canvas) {
   }, myState.interval);
 }
 
-CanvasState.prototype.addShape = function (shape) {
+gameCanvasState.prototype.addShape = function (shape) {
   this.shapes.push(shape);
+  shape.center(shape.x, shape.y);
   this.valid = false;
 }
 
-CanvasState.prototype.clear = function () {
+gameCanvasState.prototype.clear = function () {
   this.ctx.clearRect(0, ofstV, this.width, this.height);
 }
 
 // While draw is called as often as the INTERVAL variable demands,
 // It only ever does something if the canvas gets invalidated by our code
-CanvasState.prototype.draw = function () {
+gameCanvasState.prototype.draw = function () {
   // if our state is invalid, redraw and validate!
   if (!this.valid) {
     var ctx = this.ctx;
@@ -473,7 +532,7 @@ CanvasState.prototype.draw = function () {
 
 // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
 // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
-CanvasState.prototype.getMouse = function (e) {
+gameCanvasState.prototype.getMouse = function (e) {
   var element = this.canvas,
     offsetX = 0,
     offsetY = 0,
@@ -482,7 +541,7 @@ CanvasState.prototype.getMouse = function (e) {
   // Compute the total offset
   if (element.offsetParent !== undefined) {
     do {
-      offsetX += element.offsetLeft;
+      offsetX += element.offsetLeft;gameBoard.draw();
       offsetY += element.offsetTop;
     } while ((element = element.offsetParent));
   }
@@ -503,20 +562,122 @@ CanvasState.prototype.getMouse = function (e) {
 }
 
 function init() {
-  var s = new CanvasState(document.getElementById('canvas'));
-  s.addShape(new Shape(40, 40, 50, 50)); // The default is gray
-  s.addShape(new Shape(60, 140, 40, 60, 'lightskyblue'));
-  // Lets make some partially transparent
-  s.addShape(new Shape(80, 150, 60, 30, 'rgba(127, 255, 212, .5)'));
-  s.addShape(new Shape(125, 80, 30, 80, 'rgba(245, 222, 179, .7)'));
-  s.addShape(new Piece(230, 500 - 310, 16, 'rgb(245, 222, 179)', "blue"));
-  s.addShape(new Piece(230, 500 - 190, 16, 'rgb(100, 222, 179)', "red"));
-  s.addShape(new Piece(230, 500 - 230, 16, 'rgb(245, 60, 179)', "red"));
-  s.addShape(new Piece(230, 500 - 270, 16, 'rgb(245, 222, 90)', "blue"));
-  s.addShape(new Crown(230 - 50, 500 - 270, 16, 'rgb(245, 222, 90)'));
+  gameBoard = new gameCanvasState(document.getElementById('canvas'));
+  for (var i = 1; i <= 11; i++) {
+    gameBoard.addShape(new Piece(50 + i * 50, 650 - 550 + 50, 20, 'rgb(245, 222, 90)', "blue"));
+    gameBoard.addShape(new Piece(50 + i * 50, 650 - 600 + 50, 20, 'rgb(245, 222, 179)', "blue", 2));
+    gameBoard.addShape(new Piece(50 + i * 50, 650 - 150 + 50, 20, 'rgb(100, 222, 179)', "red"));
+    gameBoard.addShape(new Piece(50 + i * 50, 650 - 100 + 50, 20, 'rgb(245, 60, 179)', "red", 2));
+  }
+  gameBoard.addShape(new Crown(650 / 2, 650 / 2, 16, 'rgb(245, 222, 90)'));
 }
 
 init();
+
+let startBtn = document.getElementById('startBtn');
+
+startBtn.addEventListener('click', function (e) {
+  const searchMsg = document.getElementById('searchMsg');
+  const errorMsg = document.getElementById('startErrorMsg');
+  if (uInput.value == "") {
+    errorMsg.hidden = false;
+  } else {
+    errorMsg.hidden = true;
+    searchMsg.hidden = false;
+    socket.emit('joinGame', uInput.value, boardSize);
+    username = uInput.value;
+    startBtn.style.background = "#FF3366"
+  }
+  if (game !== null) {
+    drawBoard();
+  }
+});
+
+let rankOfPeice = 1;
+
+let pieceRank = document.getElementById('pieceRank');
+let incRankBtn = document.getElementById('incRankBtn');
+let decRankBtn = document.getElementById('decRankBtn');
+let addPieceBtn = document.getElementById('addPieceBtn');
+let removePieceBtn = document.getElementById('removePieceBtn');
+let readyBtn = document.getElementById('readyBtn');
+
+incRankBtn.addEventListener('click', () => {
+  if (rankOfPeice < 5) {
+    rankOfPeice++;
+    pieceRank.innerText = rankOfPeice;
+  }
+});
+
+decRankBtn.addEventListener('click', () => {
+  if (rankOfPeice > 1) {
+    rankOfPeice--;
+    pieceRank.innerText = rankOfPeice;
+  }
+})
+
+addPieceBtn.addEventListener('click', (e) => {
+  let x = cellClicked[0] * 50 + 25;
+  let y = cellClicked[1] * 50 + 25;
+  let p = new Piece(x, 650 - y, 16, 'rgb(245, 222, 90)', "red", rankOfPeice)
+  p.cellX = cellClicked[0];
+  p.cellY = cellClicked[1];
+  gameBoard.addShape(p);
+  // drawBoard();
+  // gameBoard.draw();
+});
+
+removePieceBtn.addEventListener('click', (e) => {
+  let found = 0;
+  for (let i = 0; i < gameBoard.shapes.length; i++) {
+    if (found == 1) {
+      gameBoard.shapes[i - 1] = gameBoard.shapes[i];
+    } else {
+      if (gameBoard.shapes[i].id == lastPieceClicked.id) {
+        found = 1;
+      }
+    }
+  }
+  
+  gameBoard.valid = false;
+  // gameBoard.draw();
+  // drawBoard();
+});
+
+readyBtn.addEventListener('click', (e) => {
+  let text = "Are you done setting up your pieces?"
+  if (confirm(text) == true) {
+    text = "You pressed OK!";
+    socket.emit('setUp', username, gameBoard.shapes, playerNum);
+  } else {
+    text = "You canceled!";
+  }
+  gameBoard.draw();
+});
+
+setInterval(function () { timeControl(); }, 1000);
+
+function timeControl() {
+  if (gameover == false && gamestart == true) {
+    if (game.turn == "p1") {
+      game.p1time++;
+    } else if (game.turn == "p2") {
+      game.p2time++;
+    }
+    var p1time = document.getElementById("p1time");
+    let t1 = Math.floor(game.p1time / 60) + ":" + (game.p1time % 60);
+    if ((game.p1time % 60) < 10)
+      t1 = Math.floor(game.p1time / 60) + ":0" + (game.p1time % 60);
+    p1time.innerText = t1;
+    // console.log("p1 time: " + t1)
+    var p2time = document.getElementById("p2time");
+    let t2 = Math.floor(game.p2time / 60) + ":" + (game.p2time % 60);
+    if ((game.p2time % 60) < 10)
+      t1 = Math.floor(game.p2time / 60) + ":0" + (game.p2time % 60);
+    p2time.innerText = t2;
+    // console.log("p2 time: " + t2)
+  }
+}
 
 const socket = io();
 
@@ -524,12 +685,62 @@ socket.on('connect', () => {
   console.log('Connected to server');
 });
 
-
 socket.on('submit', (data) => {
   console.log('Submit button pressed:', data);
 
   // Do something with the data received from the server
 });
+
+socket.on("serverConnected", function (numberGames) {
+  console.log("Server connected. ");
+  console.log("Socket.IO ID:", socket.id)
+  var gameId = document.getElementById('gameID');
+  gameId.innerText = numberGames;
+})
+
+socket.on('p1-joined', function (game) {
+  var p1text = document.getElementById('p1Txt');
+  console.log("p1-joined event: ", game);
+  if (game.p1 == username) {
+    playerNum = 1;
+    game = game;
+    p1text.innerText = username;
+  }
+  playerTurn = true;
+});
+
+socket.on('p2-joined', function (game, self) {
+  console.log("p2-joined event: ", game);
+  var p2text = document.getElementById('p2Txt');
+  var p1text = document.getElementById('p1Txt');
+  var gameId = document.getElementById('gameID');
+  var searchMsg = document.getElementById('searchMsg');
+  var foundMsg = document.getElementById('foundMsg');
+  gameId.innerText = game.id;
+  if (game.p2 == username) {
+    game = game;
+    playerNum = 2;
+    p2text.innerText = username;
+    p1text.innerText = game.p1;
+    // gameMsg.innerText = "It's " + game.p1 + "'s turn to make a move."
+  } else if (game.p1 == username) {
+    game = game;
+    p2text.innerText = game.p2;
+    p1text.innerText = game.p1;
+    // gameMsg.innerText = "It's Your turn to make a move."
+  }
+  searchMsg.hidden = true;
+  foundMsg.hidden = false;
+  setTimeout(() => {
+    foundMsg.hidden = true;
+    gameMsg.hidden = false;
+  }, 3000)
+  drawBoard();
+  playsound("GameStart.mp3");
+  gamestart = true;
+  timeControl();
+});
+
 
 
 

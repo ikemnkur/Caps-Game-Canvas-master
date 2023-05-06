@@ -13,7 +13,7 @@ body {
     padding: 0px;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    /* padding: 10px; */
     margin: 10px;
 }
 
@@ -34,14 +34,43 @@ body {
     margin: 5px;
 }
 
-#form2 {
+
+#form {
+    /* display: flex; */
+    /* flex-direction: column; */
     text-align: center;
     justify-content: center;
     align-items: center;
-    width: 500px;
+    /* width: 500px; */
     padding: 10px;
     background-color: rgb(125, 246, 255);
     border-radius: 10px;
+    /* box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); */
+}
+
+.playersInfo {
+    padding: 5px;
+    margin: 5px;
+    border: 3px solid;
+    border-radius: 5px;
+    background-color: lightgrey;
+}
+
+.P1 {
+    color:green; 
+}
+
+.P2 {
+    color: rgb(196, 0, 0);
+}
+
+div {
+    font-family: Arial, Helvetica, sans-serif, monospace;
+}
+
+text {
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif, monospace;
 }
 
 input[type="text"],
