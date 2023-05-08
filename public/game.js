@@ -13,7 +13,7 @@ let gameover = false; gamestart = false;
 
 let gameBoard;
 let lastPieceClicked;
-let cellClicked = [0,0];
+let cellClicked = [6, 6];
 
 var canvas = document.getElementById("canvas");
 const context = canvas.getContext('2d');
@@ -26,6 +26,7 @@ var ofstV = 50;
 var ofstH = 50;
 var pad = 5;
 var boardSize = 11;
+
 
 var nRow = nRow || boardSize;    // default number of rows
 var nCol = nCol || boardSize;    // default number of columns
@@ -41,6 +42,19 @@ const winMsg = document.getElementById('winMsg');
 const loseMsg = document.getElementById('loseMsg');
 var username = "";
 var playerNum = 1;
+var board = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+]
 
 class Game {
   constructor() {
@@ -51,6 +65,20 @@ class Game {
     this.turn = "p1";
     this.moveNum = 0;
     this.boardSize = 11;
+    this.board = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ]
+    // const array = new Array(11).fill().map(() => new Array(11).fill());
     this.pieces = [];
     this.moves = [];
     // game creation variables
@@ -118,6 +146,8 @@ function drawCheckeredBackground() {
 }
 
 function updateHUD() {
+  // gameCanvasState.valid = false;
+  // gameCanvasState.
   // draw mouse position
   let ofst1 = 20; let ofst1x = 10;
   var ctx = canvas.getContext("2d");
@@ -131,6 +161,11 @@ function updateHUD() {
   ctx.fillText("Cell: [" + cellX + "," + cellY + "]", canvas.width / 2 - txtlen, ofst1);
   let position = document.getElementById("position");
   position.innerText = "Square: [" + cellX + "," + cellY + "]";
+  ctx.strokeStyle = "#FF0000";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cellClicked[0] * 50 + 1, canvas.height - cellClicked[1] * 50 - 50 + 1, cellWidth - 1, cellHeight - 1);
+  // gameCanvasState.valid = true;
+
 }
 
 var canvas = document.getElementById("canvas");
@@ -161,19 +196,6 @@ canvas.addEventListener("mousemove", function (e) {
   // console.log("Cell: [" + cellX + ", " + cellY + "]");
 });
 
-// canvas.addEventListener("mousedown", function (e) {
-//   if (ofstV - pad <= mouseY && mouseY <= canvas.height - ofstV - pad) {
-//     if (ofstH + pad <= mouseX && mouseX <= canvas.width - ofstH + pad) {
-//       cellX = Math.floor((mouseX - ofstH - pad) / cellWidth) + 1;
-//       cellY = Math.floor((mouseY - ofstV - pad) / cellHeight) + 1;
-//       updateHUD();
-//     }
-//   }
-//   console.log("Mouse (X,Y): [" + mouseX + ", " + mouseY + "]");
-//   console.log("Cell: [" + cellX + ", " + cellY + "]");
-// })
-
-
 // Piece Class
 function Piece(x, y, r, fill, color, rank) {
   this.x = x || 0;
@@ -187,6 +209,8 @@ function Piece(x, y, r, fill, color, rank) {
   this.color = color;
   this.cellX = 0;
   this.cellY = 0;
+  this.xprev = 0;
+  this.yprev = 0;
 }
 
 // Draws this shape to a given context
@@ -228,6 +252,8 @@ Piece.prototype.center = function (mx, my) {
   let x = cellX * 50 + 25;
   let y = cellY * 50 + 25;
   console.log("pos: ", "(", x, ",", y, ")");
+  this.xprev = this.x;
+  this.yprev = this.y;
   this.x = x;
   this.y = Math.abs(canvas.height - y);
 }
@@ -238,7 +264,7 @@ function Crown(x, y, r) {
   this.y = y || 0;
   this.r = r || 1;
   this.id = "crown";
-  this.type = 'obj';
+  this.type = 'crown';
   this.clicked = false;
   this.img = new Image();
   this.imgSelected = new Image();
@@ -248,6 +274,8 @@ function Crown(x, y, r) {
   this.width = 40;
   this.cellX = 0;
   this.cellY = 0;
+  this.xprev = 0;
+  this.yprev = 0;
 }
 
 // Draws crown image to a given context
@@ -272,10 +300,22 @@ Crown.prototype.contains = function (mx, my) {
 Crown.prototype.center = function (mx, my) {
   cellX = Math.floor((mx - ofstH - pad) / cellWidth) + 1;
   cellY = Math.floor((Math.abs(canvas.height - my) - ofstV) / cellHeight) + 1;
+  this.cellX = cellX;
+  this.cellY = cellY;
   let x = cellX * 50 + 25;
   let y = cellY * 50 + 25;
+  console.log("pos: ", "(", x, ",", y, ")");
+  this.xprev = this.x;
+  this.yprev = this.y;
   this.x = x;
   this.y = Math.abs(canvas.height - y);
+}
+
+function findCenter(cellX, cellY) {
+  let x = cellX * 50 + 25;
+  let y = cellY * 50 + 25;
+  console.log("pos: ", "(", x, ",", y, ")");
+  return [x, y];
 }
 
 // Circle Class
@@ -319,6 +359,17 @@ Shape.prototype.draw = function (ctx) {
 Shape.prototype.contains = function (mx, my) {
   return (this.x <= mx) && (this.x + this.w >= mx) &&
     (this.y <= my) && (this.y + this.h >= my);
+}
+
+// Rectangle Class
+function CellSelect(x, y, w, h, fill) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.w = w || 1;
+  this.h = h || 1;
+  this.fill = fill || '#AAAAAA';
+  this.id = idNum++;
+  this.type = 'rect';
 }
 
 function gameCanvasState(canvas) {
@@ -375,6 +426,20 @@ function gameCanvasState(canvas) {
     var my = mouse.y;
     var shapes = myState.shapes;
     var l = shapes.length;
+
+    if ((cellClicked[0] % 2 == 0 && cellClicked[1] % 2 == 0) || (cellClicked[0] % 2 == 1 && cellClicked[1] % 2 == 1)) {
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(cellClicked[0] * 50 + 2, canvas.height - cellClicked[1] * 50 - 50 + 2, cellWidth - 3, cellHeight - 3);
+    } else {
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(cellClicked[0] * 50 + 2, canvas.height - cellClicked[1] * 50 - 50 + 2, cellWidth - 2, cellHeight - 2);
+    }
+
+    cellClicked[0] = Math.floor((mx - ofstH - pad) / cellWidth) + 1;
+    cellClicked[1] = Math.floor((Math.abs(canvas.height - my) - ofstV) / cellHeight) + 1;
+
     for (var i = l - 1; i >= 0; i--) {
       if (shapes[i].contains(mx, my)) {
         var mySel = shapes[i];
@@ -397,17 +462,16 @@ function gameCanvasState(canvas) {
         activeObj = mySel;
         lastPieceClicked = mySel;
         return;
-      } else { 
+      } else {
         let lpc = lastPieceClicked;
-        if (lpc != null){
+        if (lpc != null) {
           lpc.clicked = false;
           lpc.center(lpc.x, lpc.y);
         }
-          
         activeObj = null;
-        // playsound("select_denied.mp3", 0.1);
       }
     }
+
     // havent returned means we have failed to select anything.
     // If there was an object selected, we deselect it
     if (myState.selection) {
@@ -429,30 +493,36 @@ function gameCanvasState(canvas) {
   }, true);
 
   canvas.addEventListener('mouseup', function (e) {
-    // if (activeObj.cellX != cellX && activeObj.cellY != cellY) {
-    //   playsound("click.mp3");
-      
-    // }
     // Center the Active Piece
     if (activeObj != null) {
       var mouse = myState.getMouse(e);
       var mx = mouse.x;
       var my = mouse.y;
-      if (activeObj.type == "piece" || activeObj.type == "obj") {
+      if (activeObj.type == "piece" || activeObj.type == 'crown') {
         if (activeObj.cellX == cellX && activeObj.cellY == cellY) {
           console.log("selected");
+          // findCenter(,)
+          cellClicked[0] = cellX;
+          cellClicked[1] = cellY;
           activeObj.center(activeObj.x, activeObj.y)
-        } else if (activeObj.cellY != cellX && activeObj.cellY != cellY) { 
+        } else if (activeObj.cellY != cellX && activeObj.cellY != cellY) {
           console.log("Dragged to: [", cellX, ",", cellY, "] from [", activeObj.cellX, ",", activeObj.cellY, "]");
           // console.log("centering: (", mx, ",", canvas.height - my, ")")
+          cellClicked[0] = cellX;
+          cellClicked[1] = cellY;
+          board[cellX + cellY * 11] = rankOfPeice;
+          gameBoard.board = board;
           activeObj.center(mx, my);
           activeObj.clicked = false;
           playsound("deselect.wav");
           myState.valid = false;
           activeObj = null;
+        } else {
+          activeObj.center(activeObj.x, activeObj.y)
         }
       }
     }
+    gameBoard.valid = false; // Draw the canvas again
     myState.dragging = false;
   }, true);
 
@@ -479,7 +549,8 @@ function gameCanvasState(canvas) {
 
 gameCanvasState.prototype.addShape = function (shape) {
   this.shapes.push(shape);
-  shape.center(shape.x, shape.y);
+  if (shape.type == "peice" || shape.type == "crown")
+    shape.center(shape.x, shape.y);
   this.valid = false;
 }
 
@@ -518,7 +589,7 @@ gameCanvasState.prototype.draw = function () {
       var mySel = this.selection;
       if (mySel.type == "rect") {
         ctx.strokeRect(mySel.x, mySel.y, mySel.w, mySel.h);
-      } else if (mySel.type == "obj") {
+      } else if (mySel.type == "crown") {
         ctx.arc(mySel.x, mySel.y, mySel.r, 0, 2 * Math.PI);
       }
     }
@@ -541,7 +612,7 @@ gameCanvasState.prototype.getMouse = function (e) {
   // Compute the total offset
   if (element.offsetParent !== undefined) {
     do {
-      offsetX += element.offsetLeft;gameBoard.draw();
+      offsetX += element.offsetLeft; gameBoard.draw();
       offsetY += element.offsetTop;
     } while ((element = element.offsetParent));
   }
@@ -563,12 +634,12 @@ gameCanvasState.prototype.getMouse = function (e) {
 
 function init() {
   gameBoard = new gameCanvasState(document.getElementById('canvas'));
-  for (var i = 1; i <= 11; i++) {
-    gameBoard.addShape(new Piece(50 + i * 50, 650 - 550 + 50, 20, 'rgb(245, 222, 90)', "blue"));
-    gameBoard.addShape(new Piece(50 + i * 50, 650 - 600 + 50, 20, 'rgb(245, 222, 179)', "blue", 2));
-    gameBoard.addShape(new Piece(50 + i * 50, 650 - 150 + 50, 20, 'rgb(100, 222, 179)', "red"));
-    gameBoard.addShape(new Piece(50 + i * 50, 650 - 100 + 50, 20, 'rgb(245, 60, 179)', "red", 2));
-  }
+  // for (var i = 1; i <= 11; i++) {
+  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 550 + 50, 20, 'rgb(245, 222, 90)', "blue"));
+  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 600 + 50, 20, 'rgb(245, 222, 179)', "blue", 2));
+  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 150 + 50, 20, 'rgb(100, 222, 179)', "red"));
+  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 100 + 50, 20, 'rgb(245, 60, 179)', "red", 2));
+  // }
   gameBoard.addShape(new Crown(650 / 2, 650 / 2, 16, 'rgb(245, 222, 90)'));
 }
 
@@ -600,7 +671,10 @@ let incRankBtn = document.getElementById('incRankBtn');
 let decRankBtn = document.getElementById('decRankBtn');
 let addPieceBtn = document.getElementById('addPieceBtn');
 let removePieceBtn = document.getElementById('removePieceBtn');
+let clearBtn = document.getElementById('clearBtn');
 let readyBtn = document.getElementById('readyBtn');
+let points = document.getElementById('points');
+let rp = document.getElementById('rp');
 
 incRankBtn.addEventListener('click', () => {
   if (rankOfPeice < 5) {
@@ -616,33 +690,37 @@ decRankBtn.addEventListener('click', () => {
   }
 })
 
+let boardPoints = 100;
+
 addPieceBtn.addEventListener('click', (e) => {
   let x = cellClicked[0] * 50 + 25;
   let y = cellClicked[1] * 50 + 25;
   let p = new Piece(x, 650 - y, 16, 'rgb(245, 222, 90)', "red", rankOfPeice)
   p.cellX = cellClicked[0];
   p.cellY = cellClicked[1];
+  boardPoints -= rankOfPeice * cellClicked[1];
   gameBoard.addShape(p);
-  // drawBoard();
-  // gameBoard.draw();
 });
 
 removePieceBtn.addEventListener('click', (e) => {
   let found = 0;
   for (let i = 0; i < gameBoard.shapes.length; i++) {
-    if (found == 1) {
-      gameBoard.shapes[i - 1] = gameBoard.shapes[i];
-    } else {
-      if (gameBoard.shapes[i].id == lastPieceClicked.id) {
-        found = 1;
-      }
+    if (gameBoard.shapes[i].id == lastPieceClicked.id) {
+      found = 1;
+      gameBoard.shapes.splice(i, 1);
     }
   }
-  
   gameBoard.valid = false;
-  // gameBoard.draw();
-  // drawBoard();
 });
+
+clearBtn.addEventListener('click', (e) => {
+  boardPoints = 100;
+  gameBoard.shapes = [];
+  gameBoard.addShape(new Crown(650 / 2, 650 / 2, 16, 'rgb(245, 222, 90)'));
+  gameBoard.valid = false;
+});
+
+
 
 readyBtn.addEventListener('click', (e) => {
   let text = "Are you done setting up your pieces?"
