@@ -38,16 +38,32 @@ app.get('/menu', (req, res) => {
 });
 
 
+
 class Game {
   constructor() {
     //server controlled variables
     this.id = 0;
-    this.p1 = "true";
+    this.p1 = "p1";
     this.p2 = "p2";
     this.turn = "p1";
     this.moveNum = 0;
     this.boardSize = 11;
-    this.pieces = [];
+    this.board = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ]
+    // const array = new Array(11).fill().map(() => new Array(11).fill());
+    this.piecesP1 = [];
+    this.piecesP2 = [];
     this.moves = [];
     // game creation variables
     this.time = 300;
@@ -56,9 +72,9 @@ class Game {
     this.range = 100;
     //timing variables
     this.startTime = new Date();
-    var now = new Date();
+    // var now = new Date();
     this.endTime = new Date();
-    this.endTime.setTime(this.startTime.getTime() + (5 * 60 * 1000));
+    this.endTime.setTime(this.startTime.getTime() + (30 * 60 * 1000));
     this.mvStartTime = new Date();
     this.mvEndTime = new Date();
     this.gameStart = false;
@@ -105,8 +121,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.emit("setUp", function(username, pieces, team) { 
+  socket.on("setUpP1", function (username, pieces, team) {
+    socket.emit("setUpOpp", username, pieces)
+  });
 
+  socket.on("setUpP2", function (username, pieces, team) {
+    socket.emit("setUpOpp", username, pieces)
   });
 
 });

@@ -41,7 +41,7 @@ const turnErrorMsg = document.getElementById('turnErrorMsg');
 const winMsg = document.getElementById('winMsg');
 const loseMsg = document.getElementById('loseMsg');
 var username = "";
-var playerNum = 1;
+var playerNum = "";
 var board = [
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -60,7 +60,7 @@ class Game {
   constructor() {
     //server controlled variables
     this.id = 0;
-    this.p1 = "true";
+    this.p1 = "p1";
     this.p2 = "p2";
     this.turn = "p1";
     this.moveNum = 0;
@@ -79,7 +79,8 @@ class Game {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ]
     // const array = new Array(11).fill().map(() => new Array(11).fill());
-    this.pieces = [];
+    this.piecesP1 = [];
+    this.piecesP2 = [];
     this.moves = [];
     // game creation variables
     this.time = 300;
@@ -88,7 +89,6 @@ class Game {
     this.range = 100;
     //timing variables
     this.startTime = new Date();
-    var now = new Date();
     this.endTime = new Date();
     this.endTime.setTime(this.startTime.getTime() + (30 * 60 * 1000));
     this.mvStartTime = new Date();
@@ -443,10 +443,10 @@ function gameCanvasState(canvas) {
     for (var i = l - 1; i >= 0; i--) {
       if (shapes[i].contains(mx, my)) {
         var mySel = shapes[i];
-        if (mySel.color == "red" && playerNum == 0) {
+        if (mySel.color == "red" && playerNum == "p1") {
           return;
         }
-        if (mySel.color == "blue" && playerNum == 1) {
+        if (mySel.color == "blue" && playerNum == "p2") {
           return;
         }
         // Keep track of where in the object we clicked
@@ -512,12 +512,17 @@ function gameCanvasState(canvas) {
           cellClicked[1] = cellY;
           board[cellX + cellY * 11] = rankOfPeice;
           gameBoard.board = board;
+          if (playerNum == "p1"){
+            game.piecesP1 = game; 
+          }
           activeObj.center(mx, my);
           activeObj.clicked = false;
           playsound("deselect.wav");
           myState.valid = false;
           activeObj = null;
         } else {
+          cellClicked[0] = cellX;
+          cellClicked[1] = cellY;
           activeObj.center(activeObj.x, activeObj.y)
         }
       }
@@ -646,24 +651,6 @@ function init() {
 init();
 
 let startBtn = document.getElementById('startBtn');
-
-startBtn.addEventListener('click', function (e) {
-  const searchMsg = document.getElementById('searchMsg');
-  const errorMsg = document.getElementById('startErrorMsg');
-  if (uInput.value == "") {
-    errorMsg.hidden = false;
-  } else {
-    errorMsg.hidden = true;
-    searchMsg.hidden = false;
-    socket.emit('joinGame', uInput.value, boardSize);
-    username = uInput.value;
-    startBtn.style.background = "#FF3366"
-  }
-  if (game !== null) {
-    drawBoard();
-  }
-});
-
 let rankOfPeice = 1;
 
 let pieceRank = document.getElementById('pieceRank');
@@ -720,17 +707,35 @@ clearBtn.addEventListener('click', (e) => {
   gameBoard.valid = false;
 });
 
-
-
 readyBtn.addEventListener('click', (e) => {
   let text = "Are you done setting up your pieces?"
   if (confirm(text) == true) {
     text = "You pressed OK!";
-    socket.emit('setUp', username, gameBoard.shapes, playerNum);
+    if (game.p1 = username)
+      socket.emit('setUpP1', username, gameBoard.shapes, game);
+    if (game.p2 = username)
+      socket.emit('setUpP2', username, gameBoard.shapes, game);
   } else {
     text = "You canceled!";
   }
   gameBoard.draw();
+});
+
+startBtn.addEventListener('click', function (e) {
+  const searchMsg = document.getElementById('searchMsg');
+  const errorMsg = document.getElementById('startErrorMsg');
+  if (uInput.value == "") {
+    errorMsg.hidden = false;
+  } else {
+    errorMsg.hidden = true;
+    searchMsg.hidden = false;
+    username = uInput.value;
+    socket.emit('joinGame', username, boardSize);
+    startBtn.style.background = "#FF3366"
+  }
+  if (game !== null) {
+    drawBoard();
+  }
 });
 
 setInterval(function () { timeControl(); }, 1000);
@@ -776,18 +781,18 @@ socket.on("serverConnected", function (numberGames) {
   gameId.innerText = numberGames;
 })
 
-socket.on('p1-joined', function (game) {
+socket.on('p1-joined', function (serverGame) {
   var p1text = document.getElementById('p1Txt');
-  console.log("p1-joined event: ", game);
+  console.log("p1-joined event: ", serverGame);
   if (game.p1 == username) {
-    playerNum = 1;
-    game = game;
+    playerNum = "p1";
+    game = serverGame;
     p1text.innerText = username;
   }
   playerTurn = true;
 });
 
-socket.on('p2-joined', function (game, self) {
+socket.on('p2-joined', function (serverGame, self) {
   console.log("p2-joined event: ", game);
   var p2text = document.getElementById('p2Txt');
   var p1text = document.getElementById('p1Txt');
@@ -796,16 +801,15 @@ socket.on('p2-joined', function (game, self) {
   var foundMsg = document.getElementById('foundMsg');
   gameId.innerText = game.id;
   if (game.p2 == username) {
-    game = game;
-    playerNum = 2;
+    game = serverGame;
+    playerNum = 'p2';
     p2text.innerText = username;
     p1text.innerText = game.p1;
-    // gameMsg.innerText = "It's " + game.p1 + "'s turn to make a move."
   } else if (game.p1 == username) {
-    game = game;
+    game = serverGame;
     p2text.innerText = game.p2;
     p1text.innerText = game.p1;
-    // gameMsg.innerText = "It's Your turn to make a move."
+    playerNum = "p1";
   }
   searchMsg.hidden = true;
   foundMsg.hidden = false;
@@ -816,9 +820,16 @@ socket.on('p2-joined', function (game, self) {
   drawBoard();
   playsound("GameStart.mp3");
   gamestart = true;
-  timeControl();
+  // timeControl();
 });
 
+
+socket.on("setUpOpp", (username, pieces) => {
+  if (playerNum == 'p1')
+    game.piecesP2 = pieces;
+  if (playerNum == 'p2')
+    game.piecesP1 = pieces;
+})
 
 
 
