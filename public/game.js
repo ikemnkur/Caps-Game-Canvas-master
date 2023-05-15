@@ -26,6 +26,8 @@ var ofstV = 50;
 var ofstH = 50;
 var pad = 5;
 var boardSize = 11;
+var pieces = []
+var oppPieces = [];
 
 
 var nRow = nRow || boardSize;    // default number of rows
@@ -77,8 +79,8 @@ class Game {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    ]
-    // const array = new Array(11).fill().map(() => new Array(11).fill());
+    ];
+
     this.piecesP1 = [];
     this.piecesP2 = [];
     this.moves = [];
@@ -98,7 +100,7 @@ class Game {
   }
 }
 
-let game = new Game();
+let game;// = new Game();
 
 function playsound(sound, volume) {
   if (soundIsplaying == false) {
@@ -206,23 +208,24 @@ function Piece(x, y, r, fill, color, rank) {
   this.id = idNum++;
   this.clicked = false;
   this.type = 'piece';
+  this.team = "p1";
   this.color = color;
   this.cellX = 0;
   this.cellY = 0;
   this.xprev = 0;
   this.yprev = 0;
-}
+ }
 
 // Draws this shape to a given context
 Piece.prototype.draw = function (ctx) {
   ctx.strokeStyle = this.fill;
   ctx.beginPath();
-  if (this.color == "blue")
+  if (this.team == "p1")
     ctx.fillStyle = "#3333FF";
-  if (this.color == "red")
+  if (this.team == "p2")
     ctx.fillStyle = "#FF3333";
-  if (this.color == "green")
-    ctx.fillStyle = "#33FF33";
+  // if (this.color == "green")
+  //   ctx.fillStyle = "#33FF33";
   ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
   ctx.fill();
 
@@ -318,48 +321,48 @@ function findCenter(cellX, cellY) {
   return [x, y];
 }
 
-// Circle Class
-function Circle(x, y, r, fill) {
-  this.x = x || 0;
-  this.y = y || 0;
-  this.r = r || 1;
-  this.fill = fill || '#AAAAAA';
-  this.id = idNum++;
-  this.type = 'circle';
-}
+// // Circle Class
+// function Circle(x, y, r, fill) {
+//   this.x = x || 0;
+//   this.y = y || 0;
+//   this.r = r || 1;
+//   this.fill = fill || '#AAAAAA';
+//   this.id = idNum++;
+//   this.type = 'circle';
+// }
 
-// Draws this shape to a given context
-Circle.prototype.draw = function (ctx) {
-  ctx.strokeStyle = this.fill;
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
-  ctx.stroke();
-}
+// // Draws this shape to a given context
+// Circle.prototype.draw = function (ctx) {
+//   ctx.strokeStyle = this.fill;
+//   ctx.beginPath();
+//   ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+//   ctx.stroke();
+// }
 
-Circle.prototype.contains = function (mx, my) {
-  return Math.sqrt((mx - this.x) * (mx - this.x) + (my - this.y) * (my - this.y)) < this.r;
-}
+// Circle.prototype.contains = function (mx, my) {
+//   return Math.sqrt((mx - this.x) * (mx - this.x) + (my - this.y) * (my - this.y)) < this.r;
+// }
 
-// Rectangle Class
-function Shape(x, y, w, h, fill) {
-  this.x = x || 0;
-  this.y = y || 0;
-  this.w = w || 1;
-  this.h = h || 1;
-  this.fill = fill || '#AAAAAA';
-  this.id = idNum++;
-  this.type = 'rect';
-}
+// // Rectangle Class
+// function Shape(x, y, w, h, fill) {
+//   this.x = x || 0;
+//   this.y = y || 0;
+//   this.w = w || 1;
+//   this.h = h || 1;
+//   this.fill = fill || '#AAAAAA';
+//   this.id = idNum++;
+//   this.type = 'rect';
+// }
 
-Shape.prototype.draw = function (ctx) {
-  ctx.fillStyle = this.fill;
-  ctx.fillRect(this.x, this.y, this.w, this.h);
-}
+// Shape.prototype.draw = function (ctx) {
+//   ctx.fillStyle = this.fill;
+//   ctx.fillRect(this.x, this.y, this.w, this.h);
+// }
 
-Shape.prototype.contains = function (mx, my) {
-  return (this.x <= mx) && (this.x + this.w >= mx) &&
-    (this.y <= my) && (this.y + this.h >= my);
-}
+// Shape.prototype.contains = function (mx, my) {
+//   return (this.x <= mx) && (this.x + this.w >= mx) &&
+//     (this.y <= my) && (this.y + this.h >= my);
+// }
 
 // Rectangle Class
 function CellSelect(x, y, w, h, fill) {
@@ -512,8 +515,8 @@ function gameCanvasState(canvas) {
           cellClicked[1] = cellY;
           board[cellX + cellY * 11] = rankOfPeice;
           gameBoard.board = board;
-          if (playerNum == "p1"){
-            game.piecesP1 = game; 
+          if (playerNum == "p1") {
+            game.piecesP1 = game;
           }
           activeObj.center(mx, my);
           activeObj.clicked = false;
@@ -554,6 +557,7 @@ function gameCanvasState(canvas) {
 
 gameCanvasState.prototype.addShape = function (shape) {
   this.shapes.push(shape);
+  pieces.push(shape);
   if (shape.type == "peice" || shape.type == "crown")
     shape.center(shape.x, shape.y);
   this.valid = false;
@@ -576,10 +580,10 @@ gameCanvasState.prototype.draw = function () {
     drawWhiteSpace();
     drawCheckeredBackground();
 
-    // draw all shapes
     var l = shapes.length;
     for (var i = 0; i < l; i++) {
-      var shape = shapes[i];
+      // var shape = shapes[i];
+      var shape = pieces[i];
       // We can skip the drawing of elements that have moved off the screen:
       if (shape.x > this.width || shape.y > this.height ||
         shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
@@ -639,20 +643,14 @@ gameCanvasState.prototype.getMouse = function (e) {
 
 function init() {
   gameBoard = new gameCanvasState(document.getElementById('canvas'));
-  // for (var i = 1; i <= 11; i++) {
-  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 550 + 50, 20, 'rgb(245, 222, 90)', "blue"));
-  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 600 + 50, 20, 'rgb(245, 222, 179)', "blue", 2));
-  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 150 + 50, 20, 'rgb(100, 222, 179)', "red"));
-  //   gameBoard.addShape(new Piece(50 + i * 50, 650 - 100 + 50, 20, 'rgb(245, 60, 179)', "red", 2));
-  // }
+
   gameBoard.addShape(new Crown(650 / 2, 650 / 2, 16, 'rgb(245, 222, 90)'));
 }
 
 init();
 
-let startBtn = document.getElementById('startBtn');
 let rankOfPeice = 1;
-
+let startBtn = document.getElementById('startBtn');
 let pieceRank = document.getElementById('pieceRank');
 let incRankBtn = document.getElementById('incRankBtn');
 let decRankBtn = document.getElementById('decRankBtn');
@@ -695,6 +693,7 @@ removePieceBtn.addEventListener('click', (e) => {
     if (gameBoard.shapes[i].id == lastPieceClicked.id) {
       found = 1;
       gameBoard.shapes.splice(i, 1);
+      pieces.splice(i, 1);
     }
   }
   gameBoard.valid = false;
@@ -703,23 +702,24 @@ removePieceBtn.addEventListener('click', (e) => {
 clearBtn.addEventListener('click', (e) => {
   boardPoints = 100;
   gameBoard.shapes = [];
+  pieces = [];
   gameBoard.addShape(new Crown(650 / 2, 650 / 2, 16, 'rgb(245, 222, 90)'));
   gameBoard.valid = false;
 });
 
-readyBtn.addEventListener('click', (e) => {
-  let text = "Are you done setting up your pieces?"
-  if (confirm(text) == true) {
-    text = "You pressed OK!";
-    if (game.p1 = username)
-      socket.emit('setUpP1', username, gameBoard.shapes, game);
-    if (game.p2 = username)
-      socket.emit('setUpP2', username, gameBoard.shapes, game);
-  } else {
-    text = "You canceled!";
-  }
-  gameBoard.draw();
-});
+// readyBtn.addEventListener('click', (e) => {
+//   let text = "Are you done setting up your pieces?"
+//   if (confirm(text) == true) {
+//     text = "You pressed OK!";
+//     if (game.p1 = username)
+//       socket.emit('setUpP1', username, gameBoard.shapes, game);
+//     if (game.p2 = username)
+//       socket.emit('setUpP2', username, gameBoard.shapes, game);
+//   } else {
+//     text = "You canceled!";
+//   }
+//   gameBoard.draw();
+// });
 
 startBtn.addEventListener('click', function (e) {
   const searchMsg = document.getElementById('searchMsg');
@@ -730,7 +730,10 @@ startBtn.addEventListener('click', function (e) {
     errorMsg.hidden = true;
     searchMsg.hidden = false;
     username = uInput.value;
-    socket.emit('joinGame', username, boardSize);
+    // if (playerNum == "p1")
+    socket.emit('joinGame', username, boardSize, pieces);
+    // else
+    // socket.emit('joinGame', username, boardSize, game.piecesP2);
     startBtn.style.background = "#FF3366"
   }
   if (game !== null) {
@@ -784,7 +787,7 @@ socket.on("serverConnected", function (numberGames) {
 socket.on('p1-joined', function (serverGame) {
   var p1text = document.getElementById('p1Txt');
   console.log("p1-joined event: ", serverGame);
-  if (game.p1 == username) {
+  if (serverGame.p1 == username) {
     playerNum = "p1";
     game = serverGame;
     p1text.innerText = username;
@@ -792,24 +795,56 @@ socket.on('p1-joined', function (serverGame) {
   playerTurn = true;
 });
 
-socket.on('p2-joined', function (serverGame, self) {
-  console.log("p2-joined event: ", game);
+socket.on('p2-joined', function (serverGame, p1p, p2p) {
+  console.log("p2-joined event: ", serverGame);
   var p2text = document.getElementById('p2Txt');
   var p1text = document.getElementById('p1Txt');
   var gameId = document.getElementById('gameID');
   var searchMsg = document.getElementById('searchMsg');
   var foundMsg = document.getElementById('foundMsg');
-  gameId.innerText = game.id;
-  if (game.p2 == username) {
+  gameId.innerText = serverGame.id;
+  if (serverGame.p2 == username) {
     game = serverGame;
-    playerNum = 'p2';
+    playerNum = "p2";
     p2text.innerText = username;
     p1text.innerText = game.p1;
-  } else if (game.p1 == username) {
+    // p1p.forEach(p => {
+    //   //add the opponent pieces to teh game
+    //   let element = new Piece(p.x, 650 - p.y, 16, 'rgb(245, 222, 90)', "red", p.rank)
+    //   element.team = "p1";
+    //   gameBoard.addShape(element);
+    // });
+
+    for (let i = 0; i < game.piecesP1.length; i++) {
+      let p = game.piecesP1[i]
+      let element = new Piece(p.x, 650 - p.y, 16, 'rgb(245, 222, 90)', "blue", p.rank)
+      element.team = "p2";
+      gameBoard.addShape(element);
+    }
+
+
+    oppPieces = p1p;
+  } else if (serverGame.p1 == username) {
+    playerNum = "p1";
     game = serverGame;
     p2text.innerText = game.p2;
     p1text.innerText = game.p1;
-    playerNum = "p1";
+
+    // p2p.forEach(p => {
+    //   //add the opponent pieces to teh game
+    //   let element = new Piece(p.x, 650 - p.y, 16, 'rgb(245, 222, 90)', "blue", p.rank)
+    //   element.team = "p2";
+    //   gameBoard.addShape(element);
+    // });
+
+    for (let i = 0; i < game.piecesP2.length; i++) {
+      let p = game.piecesP2[i]
+      let element = new Piece(p.x, 650 - p.y, 16, 'rgb(245, 222, 90)', "blue", p.rank)
+      element.team = "p2";
+      gameBoard.addShape(element);
+    }
+
+    oppPieces = p2p;
   }
   searchMsg.hidden = true;
   foundMsg.hidden = false;
@@ -819,17 +854,18 @@ socket.on('p2-joined', function (serverGame, self) {
   }, 3000)
   drawBoard();
   playsound("GameStart.mp3");
+  // game.shapes. 
   gamestart = true;
   // timeControl();
 });
 
 
-socket.on("setUpOpp", (username, pieces) => {
-  if (playerNum == 'p1')
-    game.piecesP2 = pieces;
-  if (playerNum == 'p2')
-    game.piecesP1 = pieces;
-})
+// socket.on("setUpOpp", (username, pieces) => {
+//   if (playerNum == 'p1')
+//     game.piecesP2 = pieces;
+//   if (playerNum == 'p2')
+//     game.piecesP1 = pieces;
+// })
 
 
 
